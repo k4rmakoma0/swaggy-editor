@@ -1,6 +1,6 @@
 [package]
 name = "swaggy-editor"
-version = "0.1.1"
+version = "0.1.2"
 description = "Editor y visor de especificaciones OpenAPI / Swagger"
 edition = "2021"
 default-run = "swaggy-editor"
