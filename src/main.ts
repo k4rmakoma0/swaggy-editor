@@ -14,6 +14,7 @@ import {
 import { Editor } from "./editor";
 import { Preview } from "./preview";
 import { NEW_API_YAML } from "./templates";
+import { getThemePref, initTheme, setThemePref, type ThemePref } from "./theme";
 
 type Mode = "view" | "split" | "edit";
 
@@ -111,6 +112,32 @@ function setMode(next: Mode) {
   });
   storageSet(STORAGE.mode, next);
   if (doc && next !== "view") editor.focus();
+}
+
+const THEME_LABELS: Record<ThemePref, string> = {
+  system: "Sistema",
+  light: "Claro",
+  dark: "Oscuro",
+};
+const THEME_ORDER: ThemePref[] = ["system", "light", "dark"];
+
+function setTheme(next: ThemePref) {
+  setThemePref(next);
+  renderThemeButton();
+}
+
+function cycleTheme() {
+  const i = THEME_ORDER.indexOf(getThemePref());
+  const next = THEME_ORDER[(i + 1) % THEME_ORDER.length];
+  setTheme(next);
+  toast(`Tema: ${THEME_LABELS[next]}`);
+}
+
+function renderThemeButton() {
+  const pref = getThemePref();
+  $("#theme-icon").setAttribute("href", `#i-theme-${pref}`);
+  const next = THEME_ORDER[(THEME_ORDER.indexOf(pref) + 1) % THEME_ORDER.length];
+  $("#btn-theme").title = `Tema: ${THEME_LABELS[pref]} · clic para ${THEME_LABELS[next].toLowerCase()}`;
 }
 
 function applyTooltips() {
@@ -581,6 +608,12 @@ function runCommand(id: string) {
       return convertTo("yaml");
     case "problems":
       return doc && toggleProblems();
+    case "theme_system":
+      return setTheme("system");
+    case "theme_light":
+      return setTheme("light");
+    case "theme_dark":
+      return setTheme("dark");
   }
 }
 
@@ -590,6 +623,7 @@ function bindUi() {
   on("#btn-open", openDialog);
   on("#btn-save", saveDoc);
   on("#btn-format", formatDocument);
+  on("#btn-theme", cycleTheme);
   on("#welcome-open", openDialog);
   on("#welcome-new-yaml", () => newDoc("yaml"));
   on("#welcome-new-json", () => newDoc("json"));
@@ -643,6 +677,9 @@ async function boot() {
     // Permite probar la interfaz en un navegador normal durante el desarrollo.
     await import("./dev-mock");
   }
+
+  initTheme();
+  renderThemeButton();
 
   editor = new Editor(
     $("#editor-pane"),

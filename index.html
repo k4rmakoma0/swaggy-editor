@@ -18,6 +18,9 @@
         <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16v.5"/></symbol>
         <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17v.5"/></symbol>
         <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></symbol>
+        <symbol id="i-theme-light" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+        <symbol id="i-theme-dark" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
+        <symbol id="i-theme-system" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
         <symbol id="i-logo" viewBox="0 0 24 24"><path d="M9 4c-2 0-3 1-3 3v2c0 1.2-.6 2-2 2 1.4 0 2 .8 2 2v2c0 2 1 3 3 3M15 4c2 0 3 1 3 3v2c0 1.2.6 2 2 2-1.4 0-2 .8-2 2v2c0 2-1 3-3 3"/><circle cx="12" cy="11" r="1" fill="currentColor"/></symbol>
       </defs>
     </svg>
@@ -55,13 +58,17 @@
           </div>
         </div>
 
-        <div class="group right needs-doc">
-          <div class="segmented compact" id="format-switch" role="group" aria-label="Formato">
+        <div class="group right">
+          <div class="segmented compact needs-doc" id="format-switch" role="group" aria-label="Formato">
             <button data-format="yaml" data-tip="Convertir a YAML">YAML</button>
             <button data-format="json" data-tip="Convertir a JSON">JSON</button>
           </div>
-          <button class="icon-btn" id="btn-format" data-tip="Formatear documento" data-key="⇧⌥F">
+          <button class="icon-btn needs-doc" id="btn-format" data-tip="Formatear documento" data-key="⇧⌥F">
             <svg><use href="#i-wand" /></svg>
+          </button>
+          <span class="toolbar-sep" aria-hidden="true"></span>
+          <button class="icon-btn" id="btn-theme" aria-label="Cambiar tema">
+            <svg><use id="theme-icon" href="#i-theme-system" /></svg>
           </button>
         </div>
       </header>

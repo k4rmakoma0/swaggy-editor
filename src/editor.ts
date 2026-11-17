@@ -2,28 +2,120 @@ import { basicSetup } from "codemirror";
 import { EditorState, Compartment, type Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { indentWithTab } from "@codemirror/commands";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags as t } from "@lezer/highlight";
 import { json } from "@codemirror/lang-json";
 import { yaml } from "@codemirror/lang-yaml";
 import { lintGutter, setDiagnostics, type Diagnostic } from "@codemirror/lint";
-import { oneDark } from "@codemirror/theme-one-dark";
 import type { Format, SyntaxError } from "./api";
+import { isDark, onThemeChange } from "./theme";
 
-const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-const baseTheme = EditorView.theme({
-  "&": { height: "100%", fontSize: "13px" },
+/**
+ * Tema del editor. Todos los colores salen de variables CSS (`--ed-*` y `--syn-*`
+ * en styles.css), así que el mismo tema sirve para claro y oscuro.
+ */
+const editorTheme = EditorView.theme({
+  "&": {
+    height: "100%",
+    fontSize: "13.5px",
+    color: "var(--ed-text)",
+    backgroundColor: "var(--ed-bg)",
+  },
   ".cm-scroller": {
     fontFamily:
       'ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace',
-    lineHeight: "1.55",
+    lineHeight: "1.65",
   },
-  ".cm-gutters": { borderRight: "none" },
+  ".cm-content": { caretColor: "var(--ed-cursor)", padding: "8px 0" },
+  ".cm-cursor, .cm-dropCursor": { borderLeft: "2px solid var(--ed-cursor)" },
+  "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection":
+    { backgroundColor: "var(--ed-selection) !important" },
+  ".cm-activeLine": { backgroundColor: "var(--ed-active-line)" },
+  ".cm-gutters": {
+    backgroundColor: "var(--ed-bg)",
+    color: "var(--ed-gutter)",
+    border: "none",
+  },
+  ".cm-lineNumbers .cm-gutterElement": { padding: "0 10px 0 14px", minWidth: "40px" },
+  ".cm-activeLineGutter": {
+    backgroundColor: "var(--ed-active-line)",
+    color: "var(--ed-gutter-active)",
+  },
+  ".cm-foldGutter .cm-gutterElement": { color: "var(--ed-gutter)" },
+  ".cm-foldPlaceholder": {
+    backgroundColor: "var(--surface-2)",
+    border: "1px solid var(--border)",
+    color: "var(--muted)",
+    padding: "0 6px",
+    borderRadius: "4px",
+  },
+  "&.cm-focused .cm-matchingBracket": {
+    backgroundColor: "var(--ed-bracket)",
+    outline: "1px solid var(--ed-bracket-border)",
+  },
+  ".cm-selectionMatch": { backgroundColor: "var(--ed-match)" },
+  ".cm-searchMatch": {
+    backgroundColor: "var(--ed-search)",
+    outline: "1px solid var(--ed-search-border)",
+  },
+  ".cm-searchMatch.cm-searchMatch-selected": { backgroundColor: "var(--ed-search-current)" },
+  ".cm-panels": {
+    backgroundColor: "var(--chrome)",
+    color: "var(--text)",
+    borderColor: "var(--border)",
+  },
+  ".cm-panels.cm-panels-top": { borderBottom: "1px solid var(--border)" },
+  ".cm-panels.cm-panels-bottom": { borderTop: "1px solid var(--border)" },
+  ".cm-panel input, .cm-panel button": { fontSize: "12px" },
+  ".cm-textfield": {
+    backgroundColor: "var(--surface)",
+    color: "var(--text)",
+    border: "1px solid var(--border-strong)",
+    borderRadius: "5px",
+  },
+  ".cm-button": {
+    backgroundImage: "none",
+    backgroundColor: "var(--surface-2)",
+    color: "var(--text)",
+    border: "1px solid var(--border)",
+    borderRadius: "5px",
+  },
+  ".cm-tooltip": {
+    backgroundColor: "var(--surface)",
+    color: "var(--text)",
+    border: "1px solid var(--border)",
+    borderRadius: "6px",
+    boxShadow: "var(--shadow)",
+  },
+  ".cm-tooltip-autocomplete > ul > li[aria-selected]": {
+    backgroundColor: "var(--ed-selection)",
+    color: "var(--text)",
+  },
+  ".cm-diagnostic": { padding: "6px 10px" },
+  ".cm-diagnostic-error": { borderLeftColor: "var(--danger)" },
+  ".cm-lintRange-error": {
+    backgroundImage: "none",
+    textDecoration: "underline wavy var(--danger)",
+    textUnderlineOffset: "3px",
+  },
 });
+
+const highlight = HighlightStyle.define([
+  { tag: [t.propertyName, t.definition(t.propertyName)], color: "var(--syn-key)" },
+  { tag: [t.string, t.special(t.string)], color: "var(--syn-string)" },
+  { tag: t.number, color: "var(--syn-number)" },
+  { tag: [t.bool, t.null], color: "var(--syn-literal)" },
+  { tag: [t.lineComment, t.comment], color: "var(--syn-comment)", fontStyle: "italic" },
+  { tag: [t.labelName, t.typeName], color: "var(--syn-anchor)" },
+  { tag: [t.keyword, t.meta], color: "var(--syn-keyword)" },
+  { tag: [t.separator, t.punctuation, t.brace, t.squareBracket], color: "var(--syn-punct)" },
+  { tag: t.content, color: "var(--ed-text)" },
+]);
 
 export class Editor {
   readonly view: EditorView;
   private language = new Compartment();
-  private theme = new Compartment();
+  private darkFlag = new Compartment();
   private format: Format = "yaml";
 
   constructor(
@@ -32,13 +124,9 @@ export class Editor {
     private onCursor: (line: number, column: number) => void,
   ) {
     this.view = new EditorView({ parent, state: this.createState("") });
-    darkQuery.addEventListener("change", () => {
-      this.view.dispatch({ effects: this.theme.reconfigure(this.themeExtension()) });
+    onThemeChange((dark) => {
+      this.view.dispatch({ effects: this.darkFlag.reconfigure(EditorView.darkTheme.of(dark)) });
     });
-  }
-
-  private themeExtension(): Extension {
-    return darkQuery.matches ? oneDark : [];
   }
 
   private languageExtension(): Extension {
@@ -53,9 +141,10 @@ export class Editor {
         keymap.of([indentWithTab]),
         EditorState.tabSize.of(2),
         lintGutter(),
-        baseTheme,
+        editorTheme,
+        syntaxHighlighting(highlight),
+        this.darkFlag.of(EditorView.darkTheme.of(isDark())),
         this.language.of(this.languageExtension()),
-        this.theme.of(this.themeExtension()),
         EditorView.updateListener.of((u) => {
           if (u.docChanged) this.onChange(u.state.doc.toString());
           if (u.docChanged || u.selectionSet) this.reportCursor(u.state);

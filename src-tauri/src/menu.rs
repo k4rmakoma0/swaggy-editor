@@ -44,6 +44,14 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&item("to_yaml", "Convertir a YAML", None)?)
         .separator()
         .item(&item("problems", "Mostrar/ocultar problemas", Some("CmdOrCtrl+Shift+M"))?)
+        .separator()
+        .item(
+            &SubmenuBuilder::new(app, "Tema")
+                .item(&item("theme_system", "Usar el del sistema", None)?)
+                .item(&item("theme_light", "Claro", None)?)
+                .item(&item("theme_dark", "Oscuro", None)?)
+                .build()?,
+        )
         .build()?;
 
     let mut menu = MenuBuilder::new(app);
