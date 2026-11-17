@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Swaggy Editor",
+  "version": "0.1.0",
+  "identifier": "com.swaggy.editor",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Swaggy Editor",
+        "width": 1320,
+        "height": 840,
+        "minWidth": 760,
+        "minHeight": 480,
+        "dragDropEnabled": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https: http:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "DeveloperTool",
+    "shortDescription": "Editor y visor de OpenAPI / Swagger",
+    "longDescription": "Edita y visualiza especificaciones OpenAPI 3.x y Swagger 2.0 en JSON o YAML.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["yaml", "yml"],
+        "name": "OpenAPI YAML",
+        "description": "Especificación OpenAPI / Swagger (YAML)",
+        "role": "Editor",
+        "mimeType": "application/yaml"
+      },
+      {
+        "ext": ["json"],
+        "name": "OpenAPI JSON",
+        "description": "Especificación OpenAPI / Swagger (JSON)",
+        "role": "Editor",
+        "mimeType": "application/json"
+      }
+    ]
+  }
+}

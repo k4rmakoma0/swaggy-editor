@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swaggy Editor</title>
+  </head>
+  <body class="no-doc" data-mode="split">
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <symbol id="i-new" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/></symbol>
+        <symbol id="i-open" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1"/><path d="M3 7v11a1 1 0 0 0 1 1h14.5a1 1 0 0 0 1-.8L21.7 12a1 1 0 0 0-1-1.2H7.3a1 1 0 0 0-1 .8L4 19"/></symbol>
+        <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3M7 21v-7h10v7"/></symbol>
+        <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+        <symbol id="i-split" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></symbol>
+        <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></symbol>
+        <symbol id="i-wand" viewBox="0 0 24 24"><path d="m4 20 11-11M14 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1zM19 11l.7 1.3L21 13l-1.3.7L19 15l-.7-1.3L17 13l1.3-.7z"/><path d="m13 7 2 2"/></symbol>
+        <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16v.5"/></symbol>
+        <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17v.5"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></symbol>
+        <symbol id="i-logo" viewBox="0 0 24 24"><path d="M9 4c-2 0-3 1-3 3v2c0 1.2-.6 2-2 2 1.4 0 2 .8 2 2v2c0 2 1 3 3 3M15 4c2 0 3 1 3 3v2c0 1.2.6 2 2 2-1.4 0-2 .8-2 2v2c0 2-1 3-3 3"/><circle cx="12" cy="11" r="1" fill="currentColor"/></symbol>
+      </defs>
+    </svg>
+
+    <div id="app">
+      <header class="toolbar">
+        <div class="group">
+          <button class="icon-btn" id="btn-new" data-tip="Nuevo" data-key="N">
+            <svg><use href="#i-new" /></svg>
+          </button>
+          <button class="icon-btn" id="btn-open" data-tip="Abrir…" data-key="O">
+            <svg><use href="#i-open" /></svg>
+          </button>
+          <button class="icon-btn needs-doc" id="btn-save" data-tip="Guardar" data-key="S">
+            <svg><use href="#i-save" /></svg>
+          </button>
+        </div>
+
+        <div class="doc-title needs-doc">
+          <span id="doc-name">Sin título</span>
+          <span id="dirty-dot" title="Cambios sin guardar"></span>
+        </div>
+
+        <div class="toolbar-center">
+          <div class="segmented" id="mode-switch" role="group" aria-label="Modo de vista">
+            <button data-mode="view" data-tip="Solo visualizar" data-key="1">
+              <svg><use href="#i-eye" /></svg><span>Ver</span>
+            </button>
+            <button data-mode="split" data-tip="Mixto" data-key="2">
+              <svg><use href="#i-split" /></svg><span>Mixto</span>
+            </button>
+            <button data-mode="edit" data-tip="Solo editar" data-key="3">
+              <svg><use href="#i-code" /></svg><span>Editar</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="group right needs-doc">
+          <div class="segmented compact" id="format-switch" role="group" aria-label="Formato">
+            <button data-format="yaml" data-tip="Convertir a YAML">YAML</button>
+            <button data-format="json" data-tip="Convertir a JSON">JSON</button>
+          </div>
+          <button class="icon-btn" id="btn-format" data-tip="Formatear documento" data-key="⇧⌥F">
+            <svg><use href="#i-wand" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <main id="workspace">
+        <section id="editor-pane" class="pane" aria-label="Editor"></section>
+        <div id="divider" role="separator" aria-orientation="vertical" title="Arrastra para redimensionar · doble clic para centrar"></div>
+        <section id="preview-pane" class="pane" aria-label="Vista previa">
+          <div id="preview-banner" hidden>
+            <svg><use href="#i-warn" /></svg>
+            <span id="preview-banner-text"></span>
+            <button id="preview-banner-go" class="link-btn">Ir al error</button>
+          </div>
+          <div id="preview-scroll">
+            <div id="preview"></div>
+            <div id="preview-empty" hidden>
+              <svg><use href="#i-alert" /></svg>
+              <h2>No se puede mostrar la vista previa</h2>
+              <p id="preview-empty-text"></p>
+              <button id="preview-empty-go" class="btn">Ir al editor</button>
+            </div>
+          </div>
+        </section>
+
+        <div id="welcome">
+          <div class="welcome-card">
+            <div class="welcome-logo"><svg><use href="#i-logo" /></svg></div>
+            <h1>Swaggy Editor</h1>
+            <p class="muted">Edita y visualiza especificaciones OpenAPI 3 y Swagger 2.0 en YAML o JSON.</p>
+            <div class="welcome-actions">
+              <button class="btn primary" id="welcome-open"><svg><use href="#i-open" /></svg>Abrir archivo…</button>
+              <button class="btn" id="welcome-new-yaml"><svg><use href="#i-new" /></svg>Nueva API (YAML)</button>
+              <button class="btn" id="welcome-new-json"><svg><use href="#i-new" /></svg>Nueva API (JSON)</button>
+            </div>
+            <p class="muted small">También puedes arrastrar un archivo <code>.yaml</code>, <code>.yml</code> o <code>.json</code> a la ventana.</p>
+            <div id="recent" hidden>
+              <h3>Recientes</h3>
+              <ul id="recent-list"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div id="drop-overlay" hidden>
+          <div><svg><use href="#i-open" /></svg>Suelta el archivo para abrirlo</div>
+        </div>
+      </main>
+
+      <section id="problems" hidden aria-label="Problemas">
+        <header>
+          <span>Problemas</span>
+          <button class="link-btn" id="problems-close">Cerrar</button>
+        </header>
+        <ul id="problems-list"></ul>
+      </section>
+
+      <footer class="statusbar needs-doc">
+        <span id="status-kind" class="badge"></span>
+        <span id="status-title"></span>
+        <span id="status-ops" class="muted"></span>
+        <span class="spacer"></span>
+        <button id="status-problems" class="status-btn" title="Mostrar problemas"></button>
+        <span id="status-cursor" class="muted"></span>
+        <span id="status-format" class="muted"></span>
+      </footer>
+    </div>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

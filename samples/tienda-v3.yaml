@@ -1,0 +1,72 @@
+# Ejemplo OpenAPI 3.1 en YAML
+openapi: 3.1.0
+info:
+  title: Tienda
+  version: "2.3.0"
+  description: |
+    API de ejemplo con **Markdown**, referencias y anclas YAML.
+servers:
+  - url: https://tienda.ejemplo.com/api
+paths:
+  /productos:
+    get:
+      summary: Lista productos
+      operationId: listarProductos
+      parameters:
+        - $ref: "#/components/parameters/Pagina"
+      responses:
+        200:
+          description: Página de productos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Producto"
+  /productos/{sku}:
+    get:
+      summary: Obtiene un producto
+      operationId: obtenerProducto
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: El producto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Producto"
+        404: &noEncontrado
+          description: No encontrado
+    delete:
+      summary: Elimina un producto
+      operationId: eliminarProducto
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        204:
+          description: Eliminado
+        404: *noEncontrado
+components:
+  parameters:
+    Pagina:
+      name: pagina
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+  schemas:
+    Producto:
+      type: object
+      required: [sku, nombre, precio]
+      properties:
+        sku: { type: string, examples: ["ABC-123"] }
+        nombre: { type: string }
+        precio: { type: number, format: double }
+        etiquetas:
+          type: array
+          items: { type: string }
