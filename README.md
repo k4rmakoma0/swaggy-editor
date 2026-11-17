@@ -67,17 +67,16 @@ Tauri compila para el sistema donde se ejecuta. Para generar los tres a la vez e
 
 ### Abrir en macOS
 
-La app no está firmada con un certificado de Apple Developer ni notarizada. La primera vez:
+Desde la versión 0.1.2 la app está firmada con Developer ID y notarizada por Apple, así que abre sin avisos.
 
-1. Abre el `.dmg` y arrastra **Swaggy Editor** a Aplicaciones.
-2. Ábrela. macOS dirá que no puede verificar al desarrollador; pulsa **Aceptar**.
-3. Ve a **Ajustes del Sistema → Privacidad y seguridad**, baja hasta el mensaje sobre Swaggy Editor y pulsa **Abrir igualmente**.
+Las versiones anteriores no lo están:
 
-Si una versión anterior (0.1.0) dice que la app «está dañada», quítale la marca de cuarentena:
+- **0.1.1**: ábrela, pulsa **Aceptar** en el aviso y ve a **Ajustes del Sistema → Privacidad y seguridad → Abrir igualmente**.
+- **0.1.0**: si dice que la app «está dañada», quítale la marca de cuarentena:
 
-```bash
-xattr -dr com.apple.quarantine "/Applications/Swaggy Editor.app"
-```
+  ```bash
+  xattr -dr com.apple.quarantine "/Applications/Swaggy Editor.app"
+  ```
 
 ### Firma y notarización de macOS
 
