@@ -65,6 +65,20 @@ Los instaladores quedan en `src-tauri/target/release/bundle/`:
 
 Tauri compila para el sistema donde se ejecuta. Para generar los tres a la vez está el workflow [`.github/workflows/release.yml`](.github/workflows/release.yml): sube el proyecto a GitHub y publica una etiqueta (`git tag v0.1.0 && git push --tags`). Se creará un borrador de *release* con todos los instaladores.
 
+### Abrir en macOS
+
+La app no está firmada con un certificado de Apple Developer ni notarizada. La primera vez:
+
+1. Abre el `.dmg` y arrastra **Swaggy Editor** a Aplicaciones.
+2. Ábrela. macOS dirá que no puede verificar al desarrollador; pulsa **Aceptar**.
+3. Ve a **Ajustes del Sistema → Privacidad y seguridad**, baja hasta el mensaje sobre Swaggy Editor y pulsa **Abrir igualmente**.
+
+Si una versión anterior (0.1.0) dice que la app «está dañada», quítale la marca de cuarentena:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Swaggy Editor.app"
+```
+
 ## Estructura
 
 ```

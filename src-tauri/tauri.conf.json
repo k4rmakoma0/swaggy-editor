@@ -31,6 +31,10 @@
     "category": "DeveloperTool",
     "shortDescription": "Editor y visor de OpenAPI / Swagger",
     "longDescription": "Edita y visualiza especificaciones OpenAPI 3.x y Swagger 2.0 en JSON o YAML.",
+    "macOS": {
+      "signingIdentity": "-",
+      "minimumSystemVersion": "10.15"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
