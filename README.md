@@ -79,6 +79,35 @@ Si una versión anterior (0.1.0) dice que la app «está dañada», quítale la 
 xattr -dr com.apple.quarantine "/Applications/Swaggy Editor.app"
 ```
 
+### Firma y notarización de macOS
+
+Sin configuración, el workflow firma la app *ad-hoc* y macOS pide «Abrir igualmente» la primera vez. Para que abra sin avisos hace falta una cuenta de Apple Developer y estos secretos en el repositorio (**Settings → Secrets and variables → Actions**):
+
+| Secreto | Valor |
+| --- | --- |
+| `APPLE_CERTIFICATE` | Certificado «Developer ID Application» exportado como `.p12`, en base64 |
+| `APPLE_CERTIFICATE_PASSWORD` | Contraseña con la que exportaste el `.p12` |
+| `APPLE_SIGNING_IDENTITY` | Nombre completo del certificado, p. ej. `Developer ID Application: Tu Nombre (TEAMID)` |
+| `APPLE_ID` | Correo de tu cuenta de Apple Developer |
+| `APPLE_PASSWORD` | Contraseña de app generada en [appleid.apple.com](https://appleid.apple.com) (no tu contraseña normal) |
+| `APPLE_TEAM_ID` | Tu Team ID (los 10 caracteres entre paréntesis del certificado) |
+
+Para exportar el certificado: abre **Acceso a Llaveros → Mis certificados**, clic derecho en «Developer ID Application: …» → **Exportar**, formato `.p12`. Luego, desde la carpeta del proyecto:
+
+```bash
+base64 -i DeveloperID.p12 | gh secret set APPLE_CERTIFICATE
+gh secret set APPLE_CERTIFICATE_PASSWORD
+gh secret set APPLE_SIGNING_IDENTITY
+gh secret set APPLE_ID
+gh secret set APPLE_PASSWORD
+gh secret set APPLE_TEAM_ID
+rm DeveloperID.p12
+```
+
+Cada `gh secret set` sin valor te pide escribirlo, así no queda en el historial de la terminal. Con los secretos cargados, el workflow firma, notariza y comprueba con `spctl` que macOS acepta la app.
+
+Para firmar con tu certificado en local (sin notarizar): `APPLE_SIGNING_IDENTITY="Developer ID Application: …" npm run tauri build`.
+
 ## Estructura
 
 ```

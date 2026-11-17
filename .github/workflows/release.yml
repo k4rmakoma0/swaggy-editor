@@ -1,6 +1,10 @@
 # Compila los instaladores de Windows, macOS (Intel y Apple Silicon) y Linux.
 # Se ejecuta al publicar una etiqueta `v*` (p. ej. `git tag v0.1.0 && git push --tags`)
 # o manualmente desde la pestaña Actions. Crea un borrador de release con los archivos.
+#
+# Firma de macOS: si el repositorio tiene los secretos APPLE_* (ver README), la app
+# se firma con el certificado Developer ID y se notariza con Apple. Si no, se firma
+# ad-hoc y macOS pedirá «Abrir igualmente» la primera vez.
 name: release
 
 on:
@@ -18,12 +22,16 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
+            target: aarch64-apple-darwin
             args: --target aarch64-apple-darwin
           - platform: macos-latest
+            target: x86_64-apple-darwin
             args: --target x86_64-apple-darwin
           - platform: ubuntu-22.04
+            target: ""
             args: ""
           - platform: windows-latest
+            target: ""
             args: ""
     runs-on: ${{ matrix.platform }}
     steps:
@@ -53,6 +61,40 @@ jobs:
       - name: Pruebas del backend
         run: cargo test --manifest-path src-tauri/Cargo.toml
 
+      # Solo exporta las credenciales de Apple si existen: una variable vacía haría
+      # que Tauri intentara firmar con una identidad inexistente.
+      - name: Credenciales de Apple
+        id: apple
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          export_var() {
+            local delim
+            delim="EOF_$(openssl rand -hex 8)"
+            { echo "$1<<$delim"; printf '%s\n' "${!1}"; echo "$delim"; } >> "$GITHUB_ENV"
+          }
+          if [ -n "$APPLE_CERTIFICATE" ] && [ -n "$APPLE_SIGNING_IDENTITY" ]; then
+            for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY; do export_var "$v"; done
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "Firma con Developer ID: sí"
+            if [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+              for v in APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do export_var "$v"; done
+              echo "notarized=true" >> "$GITHUB_OUTPUT"
+              echo "Notarización: sí"
+            else
+              echo "::warning::Faltan APPLE_ID, APPLE_PASSWORD o APPLE_TEAM_ID: la app se firmará pero no se notarizará."
+            fi
+          else
+            echo "Sin secretos de Apple: firma ad-hoc."
+          fi
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,3 +103,16 @@ jobs:
           releaseName: Swaggy Editor ${{ github.ref_name }}
           releaseDraft: true
           args: ${{ matrix.args }}
+
+      # Comprueba que macOS aceptará la app tal como la recibe quien la descarga.
+      - name: Verificar firma y notarización
+        if: matrix.platform == 'macos-latest' && steps.apple.outputs.signed == 'true'
+        shell: bash
+        run: |
+          APP="src-tauri/target/${{ matrix.target }}/release/bundle/macos/Swaggy Editor.app"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign -dv "$APP" 2>&1 | grep -E "Authority=Developer ID Application|TeamIdentifier"
+          if [ "${{ steps.apple.outputs.notarized }}" = "true" ]; then
+            xcrun stapler validate "$APP"
+            spctl --assess --type execute --verbose=4 "$APP"
+          fi
